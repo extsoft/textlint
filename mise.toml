@@ -8,11 +8,20 @@ description = "initializes the project"
 run = [
     "mise install",
     "hk install --mise",
+    "mise run build",
 ]
 
 [tasks.build]
 description = "builds the project"
 run = [
     "go mod tidy",
-    "go build -o textlint .",
+    "go build -o build/textlint .",
 ]
+
+[tasks.check]
+description = "checks the project"
+run = "hk check"
+
+[tasks.fix]
+description = "fixes the project"
+run = "hk fix"

@@ -51,6 +51,6 @@ Files are included only if they are valid UTF-8 and contain no null bytes. Binar
 
 Install [mise](https://mise.jdx.dev/) (dev tool version manager), then run `mise init` in the repo so the project’s tools and env are activated. See [mise docs](https://mise.jdx.dev/) for install and usage.
 
-This project uses [hk](https://hk.jdx.dev) for code checks and git hooks. Use `hk check` or `hk fix` to check or autofix.
+This project uses [hk](https://hk.jdx.dev) for code checks and git hooks. Use `mise check` or `mise fix` to check or autofix.
 
-`mise run build` builds the CLI binary.
+`mise build` builds the CLI binary.

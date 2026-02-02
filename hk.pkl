@@ -2,10 +2,6 @@ amends "package://github.com/jdx/hk/releases/download/v1.2.0/hk@1.2.0#/Config.pk
 import "package://github.com/jdx/hk/releases/download/v1.2.0/hk@1.2.0#/Builtins.pkl"
 
 local linters = new Mapping<String, Step> {
-    // uses builtin prettier linter config
-    ["prettier"] = Builtins.prettier
-
-    // define a custom linter
     ["pkl"] {
         glob = "*.pkl"
         check = "pkl eval {{files}} >/dev/null"
@@ -18,6 +14,17 @@ local linters = new Mapping<String, Step> {
     ["go test"] {
         glob = "*.go"
         check = "go test ./..."
+    }
+    ["build"] {
+        exclusive = true
+        glob = "*.go"
+        check = "mise run build"
+    }
+    ["textlint"] {
+        depends = "build"
+        glob = "*"
+        check = "./build/textlint {{files}}"
+        fix = "./build/textlint --fix {{files}}"
     }
 }
 
