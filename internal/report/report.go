@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"textlint/internal/rules"
+	"prosefmt/internal/rules"
 )
 
 type Format string

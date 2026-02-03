@@ -1,4 +1,4 @@
-package textlint
+package prosefmt
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"textlint/internal/log"
+	"prosefmt/internal/log"
 )
 
 func captureStdout(fn func()) string {

@@ -14,7 +14,7 @@ func TestIntegration_CheckAndFix(t *testing.T) {
 	if err := os.WriteFile(bad, []byte("hello   \nworld\t\n\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	exe := filepath.Join(t.TempDir(), "textlint")
+	exe := filepath.Join(t.TempDir(), "prosefmt")
 	if err := exec.Command("go", "build", "-o", exe, ".").Run(); err != nil {
 		t.Fatalf("build: %v", err)
 	}
@@ -30,18 +30,18 @@ func TestIntegration_CheckAndFix(t *testing.T) {
 	if !strings.Contains(string(out), "TL010") {
 		t.Errorf("expected output to contain TL010, got %s", out)
 	}
-	cmdFix := exec.Command(exe, "--fix", bad)
+	cmdFix := exec.Command(exe, "--write", bad)
 	cmdFix.Dir = dir
 	if outFix, err := cmdFix.CombinedOutput(); err != nil {
-		t.Fatalf("fix: %v\n%s", err, outFix)
+		t.Fatalf("write: %v\n%s", err, outFix)
 	}
 	cmdCheck2 := exec.Command(exe, "--check", bad)
 	cmdCheck2.Dir = dir
 	out2, _ := cmdCheck2.CombinedOutput()
 	if cmdCheck2.ProcessState.ExitCode() != 0 {
-		t.Errorf("expected exit 0 after fix, got %d\n%s", cmdCheck2.ProcessState.ExitCode(), out2)
+		t.Errorf("expected exit 0 after write, got %d\n%s", cmdCheck2.ProcessState.ExitCode(), out2)
 	}
 	if !strings.Contains(string(out2), "0 issue(s)") {
-		t.Errorf("expected 0 issue(s) after fix, got %s", out2)
+		t.Errorf("expected 0 issue(s) after write, got %s", out2)
 	}
 }

@@ -15,7 +15,7 @@ run = [
 description = "builds the project"
 run = [
     "go mod tidy",
-    "go build -o build/textlint .",
+    "go build -o build/prosefmt .",
 ]
 
 [tasks.check]

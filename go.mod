@@ -1,4 +1,4 @@
-module textlint
+module prosefmt
 
 go 1.25.6
 

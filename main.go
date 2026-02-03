@@ -1,7 +1,7 @@
 package main
 
-import "textlint/cmd/textlint"
+import "prosefmt/cmd/prosefmt"
 
 func main() {
-	textlint.Execute()
+	prosefmt.Execute()
 }

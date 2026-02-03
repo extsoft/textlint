@@ -20,11 +20,11 @@ local linters = new Mapping<String, Step> {
         glob = "*.go"
         check = "mise run build"
     }
-    ["textlint"] {
+    ["prosefmt"] {
         depends = "build"
         glob = "*"
-        check = "./build/textlint {{files}}"
-        fix = "./build/textlint --fix {{files}}"
+        check = "./build/prosefmt {{files}}"
+        fix = "./build/prosefmt --write {{files}}"
     }
 }
 

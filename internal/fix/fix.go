@@ -3,7 +3,7 @@ package fix
 import (
 	"os"
 	"path/filepath"
-	"textlint/internal/rules"
+	"prosefmt/internal/rules"
 )
 
 func Apply(path string) error {
@@ -20,7 +20,7 @@ func Apply(path string) error {
 
 func writeAtomic(path string, data []byte) error {
 	dir := filepath.Dir(path)
-	f, err := os.CreateTemp(dir, ".textlint-*")
+	f, err := os.CreateTemp(dir, ".prosefmt-*")
 	if err != nil {
 		return err
 	}

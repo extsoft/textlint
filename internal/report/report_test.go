@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
-	"textlint/internal/rules"
+	"prosefmt/internal/rules"
 )
 
 func TestWrite_Compact(t *testing.T) {

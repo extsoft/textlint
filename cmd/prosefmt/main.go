@@ -1,4 +1,4 @@
-package textlint
+package prosefmt
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 	"os"
 	"sort"
 	"strings"
-	"textlint/internal/fix"
-	"textlint/internal/log"
-	"textlint/internal/report"
-	"textlint/internal/rules"
-	"textlint/internal/scanner"
+	"prosefmt/internal/fix"
+	"prosefmt/internal/log"
+	"prosefmt/internal/report"
+	"prosefmt/internal/rules"
+	"prosefmt/internal/scanner"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -25,7 +25,7 @@ const (
 
 var (
 	checkFlag      bool
-	fixFlag        bool
+	writeFlag      bool
 	formatStr      string
 	quietFlag      bool
 	verboseFlag    bool
@@ -34,16 +34,16 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "textlint [--check|--fix] [--format=compact|tap|json] [--quiet|--verbose|--debug] <path> [path ...]",
-	Short: "Check or fix text files",
-	Long:  "Check or fix text files. Pass one or more files or directories (recursive). Only text files (valid UTF-8, no null bytes) are processed.",
+	Use:   "prosefmt [--check|--write] [--format=compact|tap|json] [--quiet|--verbose|--debug] <path> [path ...]",
+	Short: "Check or write text files",
+	Long:  "Check or write text files. Pass one or more files or directories (recursive). Only text files (valid UTF-8, no null bytes) are processed.",
 	Args:  cobra.ArbitraryArgs,
 	RunE:  runE,
 }
 
 func init() {
 	rootCmd.Flags().BoolVar(&checkFlag, "check", false, "check files and report issues (default)")
-	rootCmd.Flags().BoolVar(&fixFlag, "fix", false, "fix issues in place")
+	rootCmd.Flags().BoolVar(&writeFlag, "write", false, "write fixes in place")
 	rootCmd.Flags().StringVar(&formatStr, "format", FormatCompact, "output format: compact, tap, or json")
 	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "quiet: only fatal errors")
 	rootCmd.PersistentFlags().BoolVar(&verboseFlag, "verbose", false, "verbose: steps, skipped files, timing")
@@ -115,10 +115,10 @@ func runE(cmd *cobra.Command, args []string) error {
 		helpFunc(cmd, nil)
 		return nil
 	}
-	if checkFlag && fixFlag {
-		return fmt.Errorf("cannot use both --check and --fix")
+	if checkFlag && writeFlag {
+		return fmt.Errorf("cannot use both --check and --write")
 	}
-	if !checkFlag && !fixFlag {
+	if !checkFlag && !writeFlag {
 		checkFlag = true
 	}
 	validFormats := map[string]bool{FormatCompact: true, FormatTAP: true, FormatJSON: true}
@@ -126,7 +126,7 @@ func runE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid format %q (use compact, tap, or json)", formatStr)
 	}
 	log.SetLevel(verbosityLevel())
-	hadIssues, err := run(checkFlag, fixFlag, formatStr, args)
+	hadIssues, err := run(checkFlag, writeFlag, formatStr, args)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func runE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func run(check, doFix bool, format string, paths []string) (hadIssues bool, err error) {
+func run(check, doWrite bool, format string, paths []string) (hadIssues bool, err error) {
 	start := time.Now()
 	lvl := log.GetLevel()
 	if lvl >= log.Debug {
@@ -184,7 +184,7 @@ func run(check, doFix bool, format string, paths []string) (hadIssues bool, err 
 			if check {
 				log.Logf(log.Verbose, "Checking %s\n", path)
 			} else {
-				log.Logf(log.Verbose, "Fixing %s\n", path)
+				log.Logf(log.Verbose, "Writing %s\n", path)
 			}
 		}
 		issues, err := rules.CheckFile(path)
@@ -226,11 +226,11 @@ func run(check, doFix bool, format string, paths []string) (hadIssues bool, err 
 			return false, err
 		}
 		if lvl >= log.Debug {
-			log.Logf(log.Debug, "fix: applied to %s\n", path)
+			log.Logf(log.Debug, "write: applied to %s\n", path)
 		}
 	}
 	if lvl >= log.Normal && len(fileIssues) > 0 {
-		fmt.Fprintf(os.Stdout, "Fixed %d file(s).\n", len(fileIssues))
+		fmt.Fprintf(os.Stdout, "Wrote %d file(s).\n", len(fileIssues))
 	}
 	elapsed := time.Since(start)
 	if lvl >= log.Verbose {

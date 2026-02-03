@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"textlint/internal/rules"
+	"prosefmt/internal/rules"
 )
 
 func TestApply(t *testing.T) {
