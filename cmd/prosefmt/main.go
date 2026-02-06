@@ -24,6 +24,7 @@ const (
 )
 
 var (
+	version        = "dev"
 	checkFlag      bool
 	writeFlag      bool
 	formatStr      string
@@ -41,7 +42,16 @@ var rootCmd = &cobra.Command{
 	RunE:  runE,
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(version)
+	},
+}
+
 func init() {
+	rootCmd.AddCommand(versionCmd)
 	rootCmd.Flags().BoolVar(&checkFlag, "check", false, "check files and report issues (default)")
 	rootCmd.Flags().BoolVar(&writeFlag, "write", false, "write fixes in place")
 	rootCmd.Flags().StringVar(&formatStr, "format", FormatCompact, "output format: compact, tap, or json")
@@ -60,6 +70,15 @@ func helpFunc(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(out, "%s\n\n", cmd.Long)
 	}
 	fmt.Fprintf(out, "Usage:\n  %s\n\n", cmd.UseLine())
+	if len(cmd.Commands()) > 0 {
+		fmt.Fprintln(out, "Available Commands:")
+		for _, c := range cmd.Commands() {
+			if c.IsAvailableCommand() {
+				fmt.Fprintf(out, "  %s\t%s\n", c.Name(), c.Short)
+			}
+		}
+		fmt.Fprintln(out, "")
+	}
 	fmt.Fprintln(out, "Options:")
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		if !verbosityFlagNames[f.Name] {
@@ -77,6 +96,9 @@ func helpFunc(cmd *cobra.Command, args []string) {
 			printFlagUsage(out, f)
 		}
 	})
+	if version != "" {
+		fmt.Fprintf(out, "\nVersion: %s\n", version)
+	}
 }
 
 func printFlagUsage(out io.Writer, f *pflag.Flag) {

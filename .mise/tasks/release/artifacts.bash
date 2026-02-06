@@ -66,7 +66,7 @@ build_and_archive_platform() {
   [ -n "$GOARM64" ] && export GOARM64="$GOARM64"
 
   # Build binary to staging directory
-  go build -ldflags="-s -w" -o "$staging_dir/$binary_name" .
+  go build -ldflags="-s -w -X prosefmt/cmd/prosefmt.version=${version}" -o "$staging_dir/$binary_name" .
 
   # Copy LICENSE and README.md to staging directory
   cp LICENSE "$staging_dir/"

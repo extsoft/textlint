@@ -16,13 +16,6 @@ run = [
     "mise run build",
 ]
 
-[tasks.build]
-description = "builds the project"
-run = [
-    "go mod tidy",
-    "go build -o ${DIST_DIR}/prosefmt .",
-]
-
 [tasks.check]
 description = "checks the project"
 run = "hk check"

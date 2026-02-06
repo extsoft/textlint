@@ -4,31 +4,53 @@
 
 `prosefmt` is the simplest file formatter for when you just want your text to look right. No complex rules, no massive configuration files — just clean text.
 
-## Usage
+## CLI reference
+
+**Synopsis**
 
 ```bash
 prosefmt [--check|--write] [--format=compact|tap|json] [-q|--quiet|--verbose|--debug] <path> [path ...]
 ```
 
-- **Check** (default): report issues to stdout. Exit code 1 if any issue is found.
-- **Write**: write fixes in place. Prints how many files were written. Exit code 0.
+Pass at least one file or directory; directories are scanned recursively. By default the tool runs in check mode (report only). Use `--write` to apply fixes in place.
 
-You must pass at least one file or directory. Directories are scanned recursively.
+### `version`
 
-### Options
+Print the version number. Run: `prosefmt version`.
 
-| Option | Description |
-|--------|-------------|
-| `--check` | Check only, report issues (default if neither `--check` nor `--write` is set). |
-| `--write` | Write fixes in place. |
-| `--format=compact` | One line per issue plus summary (default). |
-| `--format=tap` | TAP 13 output for test runners. |
-| `--format=json` | JSON object with `files` and `summary`. |
-| `-q`, `--quiet` | Quiet: no stdout; only fatal errors on stderr. Exit code still 1 when issues found. |
-| `--verbose` | Verbose: steps, skipped (non-text) paths, and timing on stderr. |
-| `--debug` | Debug: verbose plus non-text files skipped with reason, scanner accepted/rejected, rules per file, write steps. |
+### `completion`
 
-Exactly one of `--check` or `--write` is allowed. If multiple verbosity flags are set, the noisiest wins (debug > verbose > normal > quiet).
+Generate a shell completion script. Usage: `prosefmt completion <shell>` with one of `bash`, `zsh`, `fish`, or `powershell`. See [Shell completion](#shell-completion) below for install steps.
+
+### `--check`
+
+Check only: scan paths and report issues to stdout. Exit code is 1 if any issue is found, 0 otherwise. This is the default when neither `--check` nor `--write` is set. Exactly one of `--check` or `--write` is allowed.
+
+### `--write`
+
+Write fixes in place. Files with issues are modified on disk. Prints how many files were written; exit code is 0. Exactly one of `--check` or `--write` is allowed.
+
+### `--format`
+
+Output format for check mode. One of:
+
+- **compact** (default): one line per issue as `file:line:col: rule: message`, then a summary line `N file(s) scanned, M issue(s).`
+- **tap**: TAP 13 for test runners (e.g. `1..M`, `not ok N - file:line:col rule message`).
+- **json**: JSON with `files` (path → list of `{line, column, rule, message}`) and `summary` (`files`, `issues`).
+
+### `-q`, `--quiet`
+
+Quiet: no normal stdout; only fatal errors on stderr. Exit code is still 1 when issues are found in check mode.
+
+### `--verbose`
+
+Verbose: emit steps, skipped (non-text) paths, and timing on stderr.
+
+### `--debug`
+
+Debug: same as verbose, plus non-text files skipped with reason, scanner accepted/rejected list, rules per file, and write steps. If multiple verbosity flags are set, the noisiest wins (debug > verbose > normal > quiet).
+
+## Implementatio Notes
 
 ### Rules
 
@@ -38,12 +60,6 @@ Exactly one of `--check` or `--write` is allowed. If multiple verbosity flags ar
 | **TL010** | No trailing spaces or tabs at the end of a line. |
 
 Both LF and CRLF line endings are supported; the tool preserves the detected style when writing.
-
-### Output formats
-
-- **compact**: `file:line:col: rule: message` per issue, then `N file(s) scanned, M issue(s).`
-- **tap**: TAP 13 (e.g. `1..M`, `not ok N - file:line:col rule message`).
-- **json**: `{"files": {"path": [{"line", "column", "rule", "message"}]}, "summary": {"files", "issues"}}`.
 
 ### Text vs binary
 
