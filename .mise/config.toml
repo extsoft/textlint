@@ -2,6 +2,11 @@
 go = "1.25.6"
 hk = "1.2.0"
 pkl = "0.28.2"
+shellcheck = "0.10.0"
+shfmt = "3.11.0"
+
+[env]
+DIST_DIR = "dist"
 
 [tasks.init]
 description = "initializes the project"
@@ -15,7 +20,7 @@ run = [
 description = "builds the project"
 run = [
     "go mod tidy",
-    "go build -o build/prosefmt .",
+    "go build -o ${DIST_DIR}/prosefmt .",
 ]
 
 [tasks.check]

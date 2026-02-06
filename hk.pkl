@@ -22,9 +22,22 @@ local linters = new Mapping<String, Step> {
     }
     ["prosefmt"] {
         depends = "build"
+        batch = true
         glob = "*"
-        check = "./build/prosefmt {{files}}"
-        fix = "./build/prosefmt --write {{files}}"
+        check = "./dist/prosefmt {{files}}"
+        fix = "./dist/prosefmt --write {{files}}"
+    }
+    ["shfmt"]  {
+        batch = true
+        glob = "*.{sh,bash}"
+        check = "shfmt --list --indent 2 --simplify {{files}}"
+        fix = "shfmt --list --indent 2 --simplify --write {{files}}"
+    }
+    ["shellcheck"] {
+        batch = true
+        depends = "shfmt"
+        glob = "*.{sh,bash}"
+        check = "shellcheck --exclude=SC2086 {{files}}"
     }
 }
 
