@@ -34,10 +34,12 @@ var (
 	checkHadIssues bool
 )
 
+const rootDescription = "The simplest text formatter for making your files look correct."
+
 var rootCmd = &cobra.Command{
-	Use:   "prosefmt [--check|--write] [--format=compact|tap|json] [--quiet|--verbose|--debug] <path> [path ...]",
-	Short: "Check or write text files",
-	Long:  "Check or write text files. Pass one or more files or directories (recursive). Only text files (valid UTF-8, no null bytes) are processed.",
+	Use:   "prosefmt [command] [flags] [path...]",
+	Short: rootDescription,
+	Long:  rootDescription,
 	Args:  cobra.ArbitraryArgs,
 	RunE:  runE,
 }
@@ -55,23 +57,23 @@ func init() {
 	rootCmd.Flags().BoolVar(&checkFlag, "check", false, "check files and report issues (default)")
 	rootCmd.Flags().BoolVar(&writeFlag, "write", false, "write fixes in place")
 	rootCmd.Flags().StringVar(&formatStr, "format", FormatCompact, "output format: compact, tap, or json")
-	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "quiet: only fatal errors")
-	rootCmd.PersistentFlags().BoolVar(&verboseFlag, "verbose", false, "verbose: steps, skipped files, timing")
-	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "debug: internal state, non-text files skipped with reason")
+	rootCmd.PersistentFlags().BoolVar(&quietFlag, "quiet", false, "print only fatal errors")
+	rootCmd.PersistentFlags().BoolVar(&verboseFlag, "verbose", false, "print steps, skipped files, timing")
+	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "print internal state, non-text files skipped with reason")
 	rootCmd.SetHelpFunc(helpFunc)
 }
 
-var verbosityFlagNames = map[string]bool{"quiet": true, "q": true, "verbose": true, "debug": true}
+var optionFlagNames = map[string]bool{"check": true, "write": true}
+var outputFlagNames = map[string]bool{"format": true, "quiet": true, "verbose": true, "debug": true}
 
 func helpFunc(cmd *cobra.Command, args []string) {
 	out := cmd.OutOrStderr()
-	fmt.Fprintf(out, "%s\n\n", cmd.Short)
-	if cmd.Long != "" {
-		fmt.Fprintf(out, "%s\n\n", cmd.Long)
+	if cmd.Short != "" {
+		fmt.Fprintf(out, "%s\n\n", cmd.Short)
 	}
 	fmt.Fprintf(out, "Usage:\n  %s\n\n", cmd.UseLine())
 	if len(cmd.Commands()) > 0 {
-		fmt.Fprintln(out, "Available Commands:")
+		fmt.Fprintln(out, "Commands:")
 		for _, c := range cmd.Commands() {
 			if c.IsAvailableCommand() {
 				fmt.Fprintf(out, "  %s\t%s\n", c.Name(), c.Short)
@@ -81,21 +83,26 @@ func helpFunc(cmd *cobra.Command, args []string) {
 	}
 	fmt.Fprintln(out, "Options:")
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		if !verbosityFlagNames[f.Name] {
+		if optionFlagNames[f.Name] {
 			printFlagUsage(out, f)
 		}
 	})
 	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
-		if !verbosityFlagNames[f.Name] {
+		if optionFlagNames[f.Name] {
 			printFlagUsage(out, f)
 		}
 	})
-	fmt.Fprintln(out, "Verbosity:")
-	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
-		if verbosityFlagNames[f.Name] {
+	fmt.Fprintln(out, "")
+	fmt.Fprintln(out, "Output:")
+	printed := make(map[string]bool)
+	printOutputFlag := func(f *pflag.Flag) {
+		if outputFlagNames[f.Name] && !printed[f.Name] {
+			printed[f.Name] = true
 			printFlagUsage(out, f)
 		}
-	})
+	}
+	cmd.Flags().VisitAll(printOutputFlag)
+	cmd.PersistentFlags().VisitAll(printOutputFlag)
 	if version != "" {
 		fmt.Fprintf(out, "\nVersion: %s\n", version)
 	}
