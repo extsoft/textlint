@@ -3,8 +3,8 @@ package fix
 import (
 	"os"
 	"path/filepath"
-	"testing"
 	"prosefmt/internal/rules"
+	"testing"
 )
 
 func TestApply(t *testing.T) {

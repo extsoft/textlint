@@ -3,9 +3,9 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"prosefmt/internal/rules"
 	"strings"
 	"testing"
-	"prosefmt/internal/rules"
 )
 
 func TestWrite_Compact(t *testing.T) {

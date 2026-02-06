@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"prosefmt/internal/log"
 	"strings"
 	"testing"
-	"prosefmt/internal/log"
 )
 
 func captureStdout(fn func()) string {

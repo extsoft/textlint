@@ -2,57 +2,63 @@ amends "package://github.com/jdx/hk/releases/download/v1.2.0/hk@1.2.0#/Config.pk
 import "package://github.com/jdx/hk/releases/download/v1.2.0/hk@1.2.0#/Builtins.pkl"
 
 local linters = new Mapping<String, Step> {
-    ["pkl"] {
-        glob = "*.pkl"
-        check = "pkl eval {{files}} >/dev/null"
-    }
-    ["gofmt"] {
-        glob = "*.go"
-        check = "gofmt -l -s {{files}}"
-        fix = "gofmt -w -l -s {{files}}"
-    }
-    ["go test"] {
-        glob = "*.go"
-        check = "go test ./..."
-    }
-    ["build"] {
-        exclusive = true
-        glob = "*.go"
-        check = "mise run build"
-    }
-    ["prosefmt"] {
-        depends = "build"
-        batch = true
-        glob = "*"
-        check = "./dist/prosefmt {{files}}"
-        fix = "./dist/prosefmt --write {{files}}"
-    }
-    ["shfmt"]  {
-        batch = true
-        glob = "*.{sh,bash}"
-        check = "shfmt --list --indent 2 --simplify {{files}}"
-        fix = "shfmt --list --indent 2 --simplify --write {{files}}"
-    }
-    ["shellcheck"] {
-        batch = true
-        depends = "shfmt"
-        glob = "*.{sh,bash}"
-        check = "shellcheck --exclude=SC2086 {{files}}"
-    }
+  ["pkl-eval"] {
+    glob = "*.pkl"
+    check = "pkl eval {{files}} >/dev/null"
+  }
+  ["pkl-format"] {
+    glob = "*.pkl"
+    check = "pkl format --diff-name-only {{files}}"
+    fix = "pkl format --write {{files}} || r=$?; if [ $r -eq 11 ]; then exit 0; else exit $r; fi"
+  }
+  ["gofmt"] {
+    batch = true
+    glob = "*.go"
+    check = "out=$(gofmt -l -s {{files}}); [ -n \"$out\" ] && exit 1; exit 0"
+    fix = "gofmt -w -l -s {{files}}"
+  }
+  ["go test"] {
+    glob = "*.go"
+    check = "go test ./..."
+  }
+  ["prosefmt-build"] {
+    exclusive = true
+    glob = "*.go"
+    check = "mise run build"
+  }
+  ["prosefmt-format"] {
+    depends = "prosefmt-build"
+    batch = true
+    glob = "*"
+    check = "./dist/prosefmt {{files}}"
+    fix = "./dist/prosefmt --write {{files}}"
+  }
+  ["shfmt"] {
+    batch = true
+    glob = "*.{sh,bash}"
+    check = "shfmt --list --indent 2 --simplify {{files}}"
+    fix = "shfmt --list --indent 2 --simplify --write {{files}}"
+  }
+  ["shellcheck"] {
+    depends = "shfmt"
+    batch = true
+    glob = "*.{sh,bash}"
+    check = "shellcheck --exclude=SC2086 {{files}}"
+  }
 }
 
 hooks {
-    // git hook
-    ["pre-commit"] {
-        fix = true      // automatically modify files with available linter fixes
-        steps = linters // use defalut linters
-    }
-    // "fix" and "check" are special steps for `hk fix` and `hk check` commands
-    ["fix"] {
-        fix = true
-        steps = linters
-    }
-    ["check"] {
-        steps = linters
-    }
+  // git hook
+  ["pre-commit"] {
+    fix = true // automatically modify files with available linter fixes
+    steps = linters // use defalut linters
+  }
+  // "fix" and "check" are special steps for `hk fix` and `hk check` commands
+  ["fix"] {
+    fix = true
+    steps = linters
+  }
+  ["check"] {
+    steps = linters
+  }
 }
