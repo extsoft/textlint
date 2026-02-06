@@ -1,4 +1,4 @@
-package main
+package main_test
 
 import (
 	"os"
@@ -8,16 +8,14 @@ import (
 	"testing"
 )
 
-func TestIntegration_CheckAndFix(t *testing.T) {
+func TestIntegration_CheckAndFix_Workflow(t *testing.T) {
 	dir := t.TempDir()
 	bad := filepath.Join(dir, "bad.txt")
 	if err := os.WriteFile(bad, []byte("hello   \nworld\t\n\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	exe := filepath.Join(t.TempDir(), "prosefmt")
-	if err := exec.Command("go", "build", "-o", exe, ".").Run(); err != nil {
-		t.Fatalf("build: %v", err)
-	}
+	exe := buildBinary(t)
+
 	cmd := exec.Command(exe, "--check", bad)
 	cmd.Dir = dir
 	out, _ := cmd.CombinedOutput()
@@ -30,11 +28,13 @@ func TestIntegration_CheckAndFix(t *testing.T) {
 	if !strings.Contains(string(out), "TL010") {
 		t.Errorf("expected output to contain TL010, got %s", out)
 	}
+
 	cmdFix := exec.Command(exe, "--write", bad)
 	cmdFix.Dir = dir
 	if outFix, err := cmdFix.CombinedOutput(); err != nil {
 		t.Fatalf("write: %v\n%s", err, outFix)
 	}
+
 	cmdCheck2 := exec.Command(exe, "--check", bad)
 	cmdCheck2.Dir = dir
 	out2, _ := cmdCheck2.CombinedOutput()
