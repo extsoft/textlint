@@ -8,11 +8,10 @@ const (
 
 func CheckTL001(file string, content []byte) []Issue {
 	var issues []Issue
-	le := detectLineEnding(content)
 	if len(content) == 0 {
-		issues = append(issues, Issue{File: file, Line: 1, Column: 1, RuleID: TL001ID, Message: TL001NoEnd})
 		return issues
 	}
+	le := detectLineEnding(content)
 	if le == lineEndCRLF {
 		if len(content) < 2 || content[len(content)-2] != '\r' || content[len(content)-1] != '\n' {
 			issues = append(issues, Issue{File: file, Line: 1, Column: 1, RuleID: TL001ID, Message: TL001NoEnd})
@@ -43,7 +42,7 @@ func CheckTL001(file string, content []byte) []Issue {
 
 func FixTL001(content []byte) []byte {
 	if len(content) == 0 {
-		return []byte(lineEndLF)
+		return content
 	}
 	le := detectLineEnding(content)
 	if le == lineEndCRLF {

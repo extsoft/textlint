@@ -47,8 +47,31 @@ func TestCheckTL001_MultipleNewlinesCRLF(t *testing.T) {
 
 func TestCheckTL001_EmptyFile(t *testing.T) {
 	issues := CheckTL001("f", nil)
-	if len(issues) != 1 || issues[0].Message != TL001NoEnd {
-		t.Errorf("expected one TL001 no-end for empty file, got %v", issues)
+	if len(issues) != 0 {
+		t.Errorf("expected no issues for empty file, got %v", issues)
+	}
+}
+
+func TestCheckTL001_EmptyFileSlice(t *testing.T) {
+	issues := CheckTL001("f", []byte{})
+	if len(issues) != 0 {
+		t.Errorf("expected no issues for empty file slice, got %v", issues)
+	}
+}
+
+func TestCheckTL001_OnlyNewline(t *testing.T) {
+	content := []byte("\n")
+	issues := CheckTL001("f", content)
+	if len(issues) != 0 {
+		t.Errorf("expected no issues for file with only newline, got %v", issues)
+	}
+}
+
+func TestCheckTL001_OnlyNewlineCRLF(t *testing.T) {
+	content := []byte("\r\n")
+	issues := CheckTL001("f", content)
+	if len(issues) != 0 {
+		t.Errorf("expected no issues for file with only CRLF newline, got %v", issues)
 	}
 }
 
@@ -81,6 +104,30 @@ func TestFixTL001_CRLF(t *testing.T) {
 	out := FixTL001(content)
 	if !bytes.Equal(out, []byte("a\r\n")) {
 		t.Errorf("expected a\\r\\n, got %q", out)
+	}
+}
+
+func TestFixTL001_EmptyFile(t *testing.T) {
+	content := []byte{}
+	out := FixTL001(content)
+	if !bytes.Equal(out, content) {
+		t.Errorf("expected unchanged for empty file, got %q", out)
+	}
+}
+
+func TestFixTL001_OnlyNewline(t *testing.T) {
+	content := []byte("\n")
+	out := FixTL001(content)
+	if !bytes.Equal(out, content) {
+		t.Errorf("expected unchanged, got %q", out)
+	}
+}
+
+func TestFixTL001_OnlyNewlineCRLF(t *testing.T) {
+	content := []byte("\r\n")
+	out := FixTL001(content)
+	if !bytes.Equal(out, content) {
+		t.Errorf("expected unchanged, got %q", out)
 	}
 }
 
