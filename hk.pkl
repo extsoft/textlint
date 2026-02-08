@@ -30,8 +30,8 @@ local linters = new Mapping<String, Step> {
     depends = "prosefmt-build"
     batch = true
     glob = "*"
-    check = "./dist/prosefmt {{files}}"
-    fix = "./dist/prosefmt --write {{files}}"
+    check = "./dist/prosefmt check {{files}}"
+    fix = "./dist/prosefmt write {{files}}"
   }
   ["shfmt"] {
     batch = true

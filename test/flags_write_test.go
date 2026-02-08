@@ -16,7 +16,7 @@ func TestIntegration_Write_FixesFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	exe := buildBinary(t)
-	cmdFix := exec.Command(exe, "--write", bad)
+	cmdFix := exec.Command(exe, "write", bad)
 	cmdFix.Dir = dir
 	outFix, err := cmdFix.CombinedOutput()
 	if err != nil {
@@ -42,7 +42,7 @@ func TestIntegration_Write_ExitCodeZero(t *testing.T) {
 		t.Fatal(err)
 	}
 	exe := buildBinary(t)
-	cmd := exec.Command(exe, "--write", bad)
+	cmd := exec.Command(exe, "write", bad)
 	cmd.Dir = dir
 	if err := cmd.Run(); err != nil {
 		t.Errorf("expected exit 0 for write, got error: %v", err)

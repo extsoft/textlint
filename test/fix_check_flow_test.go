@@ -16,7 +16,7 @@ func TestIntegration_CheckAndFix_Workflow(t *testing.T) {
 	}
 	exe := buildBinary(t)
 
-	cmd := exec.Command(exe, "--check", bad)
+	cmd := exec.Command(exe, "check", bad)
 	cmd.Dir = dir
 	out, _ := cmd.CombinedOutput()
 	if cmd.ProcessState.ExitCode() != 1 {
@@ -29,13 +29,13 @@ func TestIntegration_CheckAndFix_Workflow(t *testing.T) {
 		t.Errorf("expected output to contain TL010, got %s", out)
 	}
 
-	cmdFix := exec.Command(exe, "--write", bad)
+	cmdFix := exec.Command(exe, "write", bad)
 	cmdFix.Dir = dir
 	if outFix, err := cmdFix.CombinedOutput(); err != nil {
 		t.Fatalf("write: %v\n%s", err, outFix)
 	}
 
-	cmdCheck2 := exec.Command(exe, "--check", bad)
+	cmdCheck2 := exec.Command(exe, "check", bad)
 	cmdCheck2.Dir = dir
 	out2, _ := cmdCheck2.CombinedOutput()
 	if cmdCheck2.ProcessState.ExitCode() != 0 {

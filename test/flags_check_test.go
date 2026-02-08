@@ -15,7 +15,7 @@ func TestIntegration_Check_FindsIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 	exe := buildBinary(t)
-	cmd := exec.Command(exe, "--check", bad)
+	cmd := exec.Command(exe, "check", bad)
 	cmd.Dir = dir
 	out, _ := cmd.CombinedOutput()
 	if cmd.ProcessState.ExitCode() != 1 {
@@ -36,7 +36,7 @@ func TestIntegration_Check_NoIssues(t *testing.T) {
 		t.Fatal(err)
 	}
 	exe := buildBinary(t)
-	cmd := exec.Command(exe, "--check", good)
+	cmd := exec.Command(exe, "check", good)
 	cmd.Dir = dir
 	out, _ := cmd.CombinedOutput()
 	if cmd.ProcessState.ExitCode() != 0 {
@@ -44,5 +44,23 @@ func TestIntegration_Check_NoIssues(t *testing.T) {
 	}
 	if !strings.Contains(string(out), "0 issue(s)") {
 		t.Errorf("expected output to contain '0 issue(s)', got %s", out)
+	}
+}
+
+func TestIntegration_Default_IsCheck(t *testing.T) {
+	dir := t.TempDir()
+	bad := filepath.Join(dir, "bad.txt")
+	if err := os.WriteFile(bad, []byte("x  \n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	exe := buildBinary(t)
+	cmd := exec.Command(exe, bad)
+	cmd.Dir = dir
+	out, _ := cmd.CombinedOutput()
+	if cmd.ProcessState.ExitCode() != 1 {
+		t.Errorf("expected exit 1 when issues (default check), got %d\n%s", cmd.ProcessState.ExitCode(), out)
+	}
+	if !strings.Contains(string(out), "TL010") {
+		t.Errorf("expected default to run check and report TL010, got %s", out)
 	}
 }

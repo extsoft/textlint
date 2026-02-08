@@ -19,22 +19,17 @@ import (
 
 var (
 	version        = "dev"
-	checkFlag      bool
-	writeFlag      bool
-	silentFlag     bool
-	compactFlag    bool
-	verboseFlag    bool
 	checkHadIssues bool
 )
 
 const rootDescription = "The simplest text formatter for making your files look correct."
 
 var rootCmd = &cobra.Command{
-	Use:   "prosefmt [command] [flags] [path...]",
+	Use:   "prosefmt [command]",
 	Short: rootDescription,
 	Long:  rootDescription,
 	Args:  cobra.ArbitraryArgs,
-	RunE:  runE,
+	RunE:  rootRunE,
 }
 
 var versionCmd = &cobra.Command{
@@ -45,21 +40,58 @@ var versionCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-	rootCmd.Flags().BoolVar(&checkFlag, "check", false, "check files and report issues (default)")
-	rootCmd.Flags().BoolVar(&writeFlag, "write", false, "write fixes in place")
-	rootCmd.PersistentFlags().BoolVar(&silentFlag, "silent", false, "no standard output printed")
-	rootCmd.PersistentFlags().BoolVar(&compactFlag, "compact", false, "show formatted or errored files (default)")
-	rootCmd.PersistentFlags().BoolVar(&verboseFlag, "verbose", false, "print debug output (steps, scanner, rules, timing)")
-	rootCmd.SetHelpFunc(helpFunc)
+var checkCmd = &cobra.Command{
+	Use:   "check [flags] paths...",
+	Short: "Review the given paths for format issues (default)",
+	Long:  "Recursively scan the given paths and check any non-binary files for format issues. Exit with code 1 if any problems are detected; otherwise, exit with code 0. This is the default behavior when no command is specified.",
+	Args:  cobra.ArbitraryArgs,
+	RunE:  checkRunE,
 }
 
-var optionFlagNames = map[string]bool{"check": true, "write": true}
-var outputFlagOrder = []string{"silent", "compact", "verbose"}
-var outputFlagNames = map[string]bool{"silent": true, "compact": true, "verbose": true}
+var writeCmd = &cobra.Command{
+	Use:   "write [flags] paths...",
+	Short: "Apply fixes in place to the given paths",
+	Long:  "Recursively scan the given paths and fix format issues in any non-binary files.",
+	Args:  cobra.ArbitraryArgs,
+	RunE:  writeRunE,
+}
 
-func helpFunc(cmd *cobra.Command, args []string) {
+func addOutputFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("silent", false, "No output printed")
+	cmd.Flags().Bool("compact", false, "Show formatted or errored files (default)")
+	cmd.Flags().Bool("verbose", false, "Print debug output (steps, scanner, rules, timing)")
+}
+
+func outputLevelFromCmd(cmd *cobra.Command) log.Level {
+	silent, _ := cmd.Flags().GetBool("silent")
+	compact, _ := cmd.Flags().GetBool("compact")
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	if verbose {
+		return log.Verbose
+	}
+	if compact {
+		return log.Normal
+	}
+	if silent {
+		return log.Silent
+	}
+	return log.Normal
+}
+
+func init() {
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(writeCmd)
+	addOutputFlags(checkCmd)
+	addOutputFlags(writeCmd)
+	rootCmd.SetHelpFunc(rootHelpFunc)
+	checkCmd.SetHelpFunc(commandHelpFunc)
+	writeCmd.SetHelpFunc(commandHelpFunc)
+}
+
+var outputFlagOrder = []string{"silent", "compact", "verbose"}
+
+func rootHelpFunc(cmd *cobra.Command, args []string) {
 	out := cmd.OutOrStderr()
 	if cmd.Short != "" {
 		fmt.Fprintf(out, "%s\n\n", cmd.Short)
@@ -67,28 +99,63 @@ func helpFunc(cmd *cobra.Command, args []string) {
 	fmt.Fprintf(out, "Usage:\n  %s\n\n", cmd.UseLine())
 	if len(cmd.Commands()) > 0 {
 		fmt.Fprintln(out, "Commands:")
+		maxLen := 0
+		for _, c := range cmd.Commands() {
+			if c.IsAvailableCommand() && len(c.Name()) > maxLen {
+				maxLen = len(c.Name())
+			}
+		}
 		for _, c := range cmd.Commands() {
 			if c.IsAvailableCommand() {
-				fmt.Fprintf(out, "  %s\t%s\n", c.Name(), c.Short)
+				fmt.Fprintf(out, "  %-*s  %s\n", maxLen, c.Name(), c.Short)
 			}
 		}
 		fmt.Fprintln(out, "")
 	}
-	fmt.Fprintln(out, "Options:")
-	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		if optionFlagNames[f.Name] {
-			printFlagUsage(out, f)
+	fmt.Fprintln(out, "With no command, runs 'check' by default. Use 'check' or 'write' for output options (--silent, --compact, --verbose).")
+	if version != "" {
+		fmt.Fprintf(out, "\nVersion: %s\n", version)
+	}
+}
+
+func wrapWords(s string, width int) string {
+	if width <= 0 {
+		return s
+	}
+	var b strings.Builder
+	for _, para := range strings.Split(s, "\n") {
+		para = strings.TrimSpace(para)
+		if para == "" {
+			b.WriteString("\n")
+			continue
 		}
-	})
-	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
-		if optionFlagNames[f.Name] {
-			printFlagUsage(out, f)
+		for {
+			if len(para) <= width {
+				b.WriteString(para)
+				b.WriteString("\n")
+				break
+			}
+			i := strings.LastIndex(para[:width+1], " ")
+			if i <= 0 {
+				i = width
+			}
+			b.WriteString(para[:i])
+			b.WriteString("\n")
+			para = strings.TrimSpace(para[i:])
 		}
-	})
-	fmt.Fprintln(out, "")
+	}
+	return strings.TrimSuffix(b.String(), "\n")
+}
+
+func commandHelpFunc(cmd *cobra.Command, args []string) {
+	out := cmd.OutOrStderr()
+	if cmd.Long != "" {
+		fmt.Fprintf(out, "%s\n\n", wrapWords(cmd.Long, 72))
+	}
+	fmt.Fprintf(out, "Usage:\n  %s\n\n", cmd.UseLine())
 	fmt.Fprintln(out, "Output:")
 	for _, name := range outputFlagOrder {
-		if f := cmd.PersistentFlags().Lookup(name); f != nil {
+		if f := cmd.Flags().Lookup(name); f != nil {
 			printFlagUsage(out, f)
 		}
 	}
@@ -115,37 +182,42 @@ func Execute() {
 	}
 }
 
-func verbosityLevel() log.Level {
-	if silentFlag {
-		return log.Silent
-	}
-	if verboseFlag {
-		return log.Verbose
-	}
-	if compactFlag {
-		return log.Normal
-	}
-	return log.Normal
-}
-
-func runE(cmd *cobra.Command, args []string) error {
+func rootRunE(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		helpFunc(cmd, nil)
+		rootHelpFunc(cmd, nil)
 		return nil
 	}
-	if checkFlag && writeFlag {
-		return fmt.Errorf("cannot use both --check and --write")
-	}
-	if !checkFlag && !writeFlag {
-		checkFlag = true
-	}
-	log.SetLevel(verbosityLevel())
-	hadIssues, err := run(checkFlag, writeFlag, args)
+	log.SetLevel(log.Normal)
+	hadIssues, err := run(true, false, args)
 	if err != nil {
 		return err
 	}
-	checkHadIssues = checkFlag && hadIssues
+	checkHadIssues = hadIssues
 	return nil
+}
+
+func checkRunE(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		commandHelpFunc(cmd, nil)
+		return nil
+	}
+	log.SetLevel(outputLevelFromCmd(cmd))
+	hadIssues, err := run(true, false, args)
+	if err != nil {
+		return err
+	}
+	checkHadIssues = hadIssues
+	return nil
+}
+
+func writeRunE(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		commandHelpFunc(cmd, nil)
+		return nil
+	}
+	log.SetLevel(outputLevelFromCmd(cmd))
+	_, err := run(false, true, args)
+	return err
 }
 
 func run(check, doWrite bool, paths []string) (hadIssues bool, err error) {

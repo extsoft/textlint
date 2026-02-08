@@ -15,7 +15,7 @@ When you add, remove, or change any of the following in the CLI code, update the
 **What to update in README.md**
 
 1. **Synopsis** – Keep the usage line and the short paragraph under it aligned with the real usage and defaults.
-2. **Per-flag sections** – One level-3 subsection per flag (e.g. `### \`--check\`` or `### \`-q\`, \`--quiet\``). Add a section for new flags, remove for removed flags, and edit the text when behavior or description changes.
+2. **Per-flag sections** – One level-3 subsection per flag (e.g. `### \`--silent\``). Add a section for new flags, remove for removed flags, and edit the text when behavior or description changes.
 3. **Subcommands** – If you add subcommands (e.g. `version`, `completion`), add a short subsection for each in the CLI reference describing what they do and how to invoke them.
 
 After editing the CLI, check the "CLI reference" section and apply any needed doc updates in the same change.

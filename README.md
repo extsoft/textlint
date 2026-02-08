@@ -9,50 +9,42 @@
 **Synopsis**
 
 ```bash
-prosefmt [command] [flags] [path...]
+prosefmt [command] [path...]
 ```
 
-Pass at least one file or directory; directories are scanned recursively. By default the tool runs in check mode (report only). Use `--write` to apply fixes in place.
+Pass at least one file or directory; directories are scanned recursively. With no command, runs **check** by default (report only). Use the **write** command to apply fixes in place. Output options (`--silent`, `--compact`, `--verbose`) apply only to the **check** and **write** commands.
 
 **Commands**
 
+- [check](#check) (default)
+- [write](#write)
 - [version](#version)
-- [completion](#completion)
 
-**Options**
+### `check`
 
-- [--check](#--check)
-- [--write](#--write)
+Check files and report issues. Scan paths and report issues to stdout. Exit code is 1 if any issue is found, 0 otherwise. This is the default when no command is specified (e.g. `prosefmt path...`).
 
-**Output**
+**Output** (only for this command):
 
-- [--silent](#--silent)
-- [--compact](#--compact)
-- [--verbose](#--verbose)
+- [--silent](#--silent): No standard output printed. Exit code is still 1 when issues are found.
+- [--compact](#--compact): Show report / formatted or errored files (default when no output flag is set).
+- [--verbose](#--verbose): Print debug output on stderr (steps, scanning summary, rules per file, timing).
+
+### `write`
+
+Write fixes in place. Files with issues are modified on disk. Prints how many files were written and lists each path; exit code is 0.
+
+**Output** (only for this command): same as [check](#check) — `--silent`, `--compact`, `--verbose`.
 
 ### `version`
 
 Print the version number. Run: `prosefmt version`.
 
-### `completion`
+### Output (check and write only)
 
-Generate a shell completion script. Usage: `prosefmt completion <shell>` with one of `bash`, `zsh`, `fish`, or `powershell`. See [Shell completion](#shell-completion) below for install steps.
+Check prints a compact report: one line per issue as `file:line:col: rule: message`, grouped by file then rule; then a summary line `N file(s) scanned, M issue(s).`
 
-### Options
-
-#### `--check`
-
-Check only: scan paths and report issues to stdout. Exit code is 1 if any issue is found, 0 otherwise. This is the default when neither `--check` nor `--write` is set. Exactly one of `--check` or `--write` is allowed.
-
-#### `--write`
-
-Write fixes in place. Files with issues are modified on disk. Prints how many files were written and lists each path; exit code is 0. Exactly one of `--check` or `--write` is allowed.
-
-### Output
-
-Check mode prints a compact report: one line per issue as `file:line:col: rule: message`, grouped by file then rule; then a summary line `N file(s) scanned, M issue(s).`
-
-By default output is **compact**: report (or formatted/errored file summary), "No text files found." when applicable, "Wrote N file(s):" plus one path per line in write mode. Use `--silent`, `--compact`, or `--verbose` to set the level explicitly.
+By default output is **compact**: report (or "No text files found.", or "Wrote N file(s):" plus paths in write mode). If multiple output flags are set, the noisiest wins (verbose > compact > silent).
 
 #### `--silent`
 
@@ -60,13 +52,13 @@ No standard output printed. Exit code is still 1 when issues are found in check 
 
 #### `--compact`
 
-Show formatted or errored files: report in check mode, "No text files found." when applicable, "Wrote N file(s):" plus one path per line in write mode. This is the default when no output level flag is set. If multiple output flags are set, the noisiest wins (verbose > compact > silent).
+Show formatted or errored files: report in check mode, "No text files found." when applicable, "Wrote N file(s):" plus one path per line in write mode. Default when no output level flag is set.
 
 #### `--verbose`
 
 Print debug output: steps, scanning summary, scanner accepted/rejected with reasons, rules per file, write steps, and timing on stderr.
 
-## Implementatio Notes
+## Implementation Notes
 
 ### Rules
 
